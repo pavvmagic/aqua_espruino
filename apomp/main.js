@@ -39,7 +39,7 @@ function serCmd(cmd,to){
 
 var iLcdTO=1000,iLcdExTO=4000,iEspTO=3000;
 var lcdO={};
-lcdO.ver="JS:"+process.version+" 1.8/"+cfg.ver;
+lcdO.ver="JS:"+process.version+" 1.9/"+cfg.ver;
 
 var iSerCmdV={st:0,conn:0,ifttt:8};
 var IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
