@@ -39,11 +39,11 @@ function serCmd(cmd,to){
 
 var iLcdTO=1000,iLcdExTO=4000,iEspTO=3000;
 var lcdO={};
-lcdO.ver="JS:"+process.version+" 1.7/"+cfg.ver;
+lcdO.ver="JS:"+process.version+" 1.8/"+cfg.ver;
 
 var iSerCmdV={st:0,conn:0,ifttt:8};
 var IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
-var IftttMsg=["Power_restart"];
+var IftttMsg=["power_restart"];
 var IftttRStr="";
 function iSerCmd(){
   switch (iSerCmdV.st){
@@ -70,7 +70,7 @@ function iSerCmd(){
       iSerCmdV.st=-1;
       break;
     case 8:
-      if (IftttMsg.length==0) IftttMsg[0]="Time_syncronization";
+      if (IftttMsg.length==0) IftttMsg[0]="time_syncron";
       IftttRStr=IftttR[0]+cfg.aplName+IftttR[1]+cfg.iftttKey+"?value1="+IftttMsg[0];
       if (IftttMsg[1]!=undefined) IftttRStr+="&value2="+IftttMsg[1];
       if (IftttMsg[2]!=undefined) IftttRStr+="&value3="+IftttMsg[2];
@@ -96,8 +96,7 @@ function iSerCmd(){
         iVar.srvR=true;
         IftttMsg=[];
         iEspTO=24*60*60*1000;
-        clearTimeout(iEspTmr);
-        iEspTmr=setTimeout(iEsp,iEspTO);
+        iEspTimeout(iEspTO);
         delete lcdO.msg;
         delete lcdO.ip;
         iLcdExUpd();
@@ -173,13 +172,18 @@ function iLcdEx(){
 
 var iVar={espS:"pon",srvR:false,ip:""};
 var iEspTmr;
+function iEspTimeout(timeout){
+  if (iEspTmr!==undefined) clearTimeout(iEspTmr);
+  iEspTmr=setTimeout(iEsp,timeout);
+}
 function iEsp(){
   switch (iVar.espS){
     case "gtmOK":
     case "gtmNO":
     case "srvOK":
+      if (IftttMsg.length==0) IftttMsg[0]="time_syncron";
       print("putIftttMsg: "+IftttMsg);
-      lcdO.msg="M: putIftttMsg";
+      lcdO.msg="M: "+IftttMsg[0];
       iLcdExUpd();
       iVar.espS="gtmNO";
       iVar.srvR=false;
@@ -198,7 +202,10 @@ function iEsp(){
       iSerCmdV.st=iSerCmdV.conn;
       serCmd("\r\nAT+RST",5000);
       break;
-    default: iEspTO=1000;
+    default:
+      iVar.espS="srvNO";
+      iVar.srvR=false;
+      iEspTO=1000;
   }
   iEspTmr=setTimeout(iEsp,iEspTO);
 }
@@ -249,7 +256,9 @@ function iLogic(){
   }
 
   if (secEv==true){
-    if (v.tmr.feed) v.tmr.feed--;
+    if (v.tmr.feed){
+      if(--v.tmr.feed==0) v.tmr.pPomp=60;
+    }
     if (v.tmr.pPomp) v.tmr.pPomp--;
     if (v.tmr.pPompOff) v.tmr.pPompOff--;
     if (v.tmr.mPomp) v.tmr.mPomp--;
@@ -263,7 +272,9 @@ function iLogic(){
   if (i==v.kbdOld){
     if (i==1 && v.kbdSt==0){
       if (v.tmr.feed==0) v.tmr.feed=600;
-      else v.tmr.feed=0;
+      else{
+        v.tmr.feed=0; v.tmr.pPomp=60;
+      }
     }
     else if (i==2 && v.kbdSt==0){
       if (v.tmr.pPomp==0) v.tmr.pPomp=60;
@@ -286,9 +297,8 @@ function iLogic(){
         if (v.tmr.mPomp==0){
           if (v.tmr.mPompOff==0){
             v.tmr.mPomp=2; v.tmr.mPompOff=600;
-            IftttMsg[IftttMsg.length]="High_water_level";
-            if (iEspTmr) clearTimeout(iEspTmr);
-            iEspTmr=setTimeout(iEsp,1000);
+            IftttMsg[IftttMsg.length]="high_wt_level";
+            iEspTimeout(1000);
           }
         }
       }
@@ -297,9 +307,8 @@ function iLogic(){
       str="Low water level"; logicLcd[0]="L";
       if (v.tmr.pPompOff==0){
         v.tmr.pPomp=30; v.tmr.pPompOff=3600;
-        IftttMsg[IftttMsg.length]="Low_water_level";
-        if (iEspTmr) clearTimeout(iEspTmr);
-        iEspTmr=setTimeout(iEsp,1000);
+        IftttMsg[IftttMsg.length]="low_wt_level";
+        iEspTimeout(1000);
       }
     }
     if ((i&1)==0){
@@ -312,10 +321,9 @@ function iLogic(){
         v.ch2max-=0.5;
         if (v.ch2max<=c.ch2min) v.ch2max=c.ch2min;
 
-        IftttMsg[IftttMsg.length]="MainPomp_voltage_dec";
+        IftttMsg[IftttMsg.length]="pomp_volt_dec";
         IftttMsg[IftttMsg.length]=parseInt(v.ch2max*1000)+"mV";
-        if (iEspTmr) clearTimeout(iEspTmr);
-        iEspTmr=setTimeout(iEsp,1000);
+        iEspTimeout(1000);
       }
     }
     else if ((i&1)==1){
@@ -327,10 +335,9 @@ function iLogic(){
         v.ch2max+=0.5;
         if (v.ch2max>=c.ch2max) v.ch2max=c.ch2max;
 
-        IftttMsg[IftttMsg.length]="MainPomp_voltage_inc";
+        IftttMsg[IftttMsg.length]="pomp_volt_inc";
         IftttMsg[IftttMsg.length]=parseInt(v.ch2max*1000)+"mV";
-        if (iEspTmr) clearTimeout(iEspTmr);
-        iEspTmr=setTimeout(iEsp,1000);
+        iEspTimeout(1000);
       }
     }
   }
@@ -369,9 +376,8 @@ function iLogic(){
   else if (lcdO.pow){
     delete lcdO.pow;
     iVar.espS="srvNO";
-    IftttMsg[IftttMsg.length]="Backup_power";
-    if (iEspTmr) clearTimeout(iEspTmr);
-    iEspTmr=setTimeout(iEsp,(5*60*1000));
+    IftttMsg[IftttMsg.length]="backup_power";
+    iEspTimeout(5*60*1000);
   }
 
   if (w.on) {
