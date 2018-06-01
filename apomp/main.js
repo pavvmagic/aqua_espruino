@@ -271,7 +271,9 @@ function iLogic(){
   var i=7-digitalRead([A5,A4,A1]);
   if (i==v.kbdOld){
     if (i==1 && v.kbdSt==0){
-      if (v.tmr.feed==0) v.tmr.feed=600;
+      if (v.tmr.feed==0){
+        v.tmr.feed=600; v.ch2max=c.ch2max;
+      }
       else{
         v.tmr.feed=0; v.tmr.pPomp=60;
       }
@@ -296,7 +298,7 @@ function iLogic(){
         v.tmr.elGate=10;
         if (v.tmr.mPomp==0){
           if (v.tmr.mPompOff==0){
-            v.tmr.mPomp=2; v.tmr.mPompOff=600;
+            v.tmr.mPomp=4; v.tmr.mPompOff=600; v.ch2max=c.ch2max;
             IftttMsg[IftttMsg.length]="high_wt_level";
             iEspTimeout(1000);
           }
