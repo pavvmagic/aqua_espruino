@@ -247,11 +247,11 @@ function serCmd(cmd,to){
 
 var iEspTO=3000;
 var lcdO={};
-lcdO.ver="JS:"+process.version+" 1.2/"+cfg.ver;
+lcdO.ver="JS:"+process.version+" 1.3/"+cfg.ver;
 
 var iSerCmdV={st:0,conn:0,ifttt:8};
 var IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
-var IftttMsg=["Power_restart"];
+var IftttMsg=["power_restart"];
 var IftttRStr="";
 function iSerCmd(){
   switch (iSerCmdV.st){
@@ -279,7 +279,7 @@ function iSerCmd(){
       iSerCmdV.st=-1;
       break;
     case 8:
-      if (IftttMsg.length==0) IftttMsg[0]="Time_syncronization";
+      if (IftttMsg.length==0) IftttMsg[0]="time_syncron";
       IftttRStr=IftttR[0]+cfg.aplName+IftttR[1]+cfg.iftttKey+"?value1="+IftttMsg[0];
       if (IftttMsg[1]!=undefined) IftttRStr+="&value2="+IftttMsg[1];
       if (IftttMsg[2]!=undefined) IftttRStr+="&value3="+IftttMsg[2];
@@ -378,8 +378,9 @@ function iEsp(){
     case "gtmOK":
     case "gtmNO":
     case "srvOK":
+      if (IftttMsg.length==0) IftttMsg[0]="time_syncron";
       print("putIftttMsg: "+IftttMsg);
-      lcdO.msg="M: putIftttMsg";
+      lcdO.msg="M: "+IftttMsg[0];
       iLcdExUpd();
       iVar.espS="gtmNO";
       iVar.srvR=false;
@@ -398,7 +399,10 @@ function iEsp(){
       iSerCmdV.st=iSerCmdV.conn;
       serCmd("\r\nAT+RST",5000);
       break;
-    default: iEspTO=1000;
+    default:
+      iVar.espS="srvNO";
+      iVar.srvR=false;
+      iEspTO=1000;
   }
   iEspTmr=setTimeout(iEsp,iEspTO);
 }
@@ -425,14 +429,15 @@ var pChStTO=0;
 function pChX(t,c,n){
   if (c.n!=0 && c.m!=0 && t==c.t){
     if (pChSt[n]==false){
-      analogWrite(pChNum[n],0.7,{freq: 1000});
+      if (n==0 || n==3) analogWrite(pChNum[n],1.0,{freq: 1000});
+      else analogWrite(pChNum[n],0.7,{freq: 1000});
       logicLcd[0]='d'; logicLcd[1]=n+1; logicLcd[3+n]='\xEF';
       pChStTO=parseInt(60*c.n/c.m);
       if (pChStTO<1) pChStTO=1;
       c.c-=c.n;
       if (c.c<0) c.c=0;
       if (c.c<(c.n*3)){
-        IftttMsg[IftttMsg.length]="Ch_"+(n+1)+"_low_level";
+        IftttMsg[IftttMsg.length]="ch_"+(n+1)+"_low_lev";
         if (iEspTmr) clearTimeout(iEspTmr);
         iEspTmr=setTimeout(iEsp,10*60000);
       }
@@ -443,7 +448,8 @@ function pChX(t,c,n){
     }
   }
   else if (pChCal[n]==true){
-    analogWrite(pChNum[n],0.7,{freq: 1000});
+    if (n==0 || n==3) analogWrite(pChNum[n],1.0,{freq: 1000});
+    else analogWrite(pChNum[n],0.7,{freq: 1000});
     logicLcd[0]='c'; logicLcd[1]=n+1; logicLcd[3+n]='\xEF';
     pChSt=[false,false,false,false];
     pChCal=[false,false,false,false];
@@ -464,8 +470,8 @@ function iPump(){
       logicLcd=[' ',' ',' ','\xEE','\xEE','\xEE','\xEE'];
       if (shortVAv4<10){
         logicLcd[2+i]='x';
-        IftttMsg[IftttMsg.length]="Ch_"+i+"_short_circuit";
-        if (iEspTmr) clearTimeout(iEspTmr);
+        IftttMsg[IftttMsg.length]="ch_"+i+"_alarm";
+        if (iEspTmr!==undefined) clearTimeout(iEspTmr);
         iEspTmr=setTimeout(iEsp,10000);
       }
       pChStTO=0;
