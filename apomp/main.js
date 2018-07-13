@@ -39,7 +39,7 @@ function serCmd(cmd,to){
 
 var iLcdTO=1000,iLcdExTO=4000,iEspTO=3000;
 var lcdO={};
-lcdO.ver="JS:"+process.version+" 1.A/"+cfg.ver;
+lcdO.ver="JS:"+process.version+" 1.B/"+cfg.ver;
 
 var iSerCmdV={st:0,conn:0,ifttt:8};
 var IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -304,6 +304,7 @@ function iLogic(){
           }
         }
       }
+      else v.tmr.feed=1;
     }
     if ((i&1)==0){
       str="Low water level"; logicLcd[0]="L";
