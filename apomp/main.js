@@ -39,7 +39,7 @@ function serCmd(cmd,to){
 
 var iLcdTO=1000,iLcdExTO=4000,iEspTO=3000;
 var lcdO={};
-lcdO.ver="JS:"+process.version+" 1.B/"+cfg.ver;
+lcdO.ver="JS:"+process.version+" 1.C/"+cfg.ver;
 
 var iSerCmdV={st:0,conn:0,ifttt:8};
 var IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -222,10 +222,11 @@ setTimeout(iEsp,iEspTO);
 
 /*---Logic---*/
 var logicConst={ch2min:10.0,ch2max:15.0,ch3max:9.0,ch4max:12.0,powVoltLv:21.0,pPompOnTime:(9*3600+30*60)};
-var logicVar={ch2v:logicConst.ch2max,ch2max:logicConst.ch2max,tmr:{feed:0,pPomp:0,pPompOff:0,mPomp:0,mPompOff:0,elGate:0,ch2low:0,ch2hi:0},ch2Old:undefined,ch3Old:undefined,ch4Old:undefined,ch4nOld:undefined,kbdOld:undefined,kbdSt:0,powVAv4:24*4};
+var logicVar={ch2v:logicConst.ch2max,ch2max:logicConst.ch2max,tmr:{feed:0,pPomp:0,pPompOff:0,mPomp:0,mPompOff:0,elGate:0,ch2low:0,ch2hi:0},ch2Old:undefined,ch3Old:undefined,ch4Old:undefined,ch4nOld:undefined,powVAv4:24*4};
 var logicWave={idx:0,on:1,cnt:1,cnfg:{n:0,dt:1,level:0,ampl:0}};
 var timeSec=0;
 var wValOld=0;
+var kbdSt=0;
 function iLogic(){
   digitalWrite(B11,0);
   var secEv=false;
@@ -268,23 +269,19 @@ function iLogic(){
     if (v.tmr.ch2hi) v.tmr.ch2hi--;
   }
 
-  var i=7-digitalRead([A5,A4,A1]);
-  if (i==v.kbdOld){
-    if (i==1 && v.kbdSt==0){
-      if (v.tmr.feed==0){
-        v.tmr.feed=600; v.ch2max=c.ch2max;
-      }
-      else{
-        v.tmr.feed=0; v.tmr.pPomp=60;
-      }
+  if (kbdSt==3){
+    if (v.tmr.feed==0){
+      v.tmr.feed=600; v.ch2max=c.ch2max;
     }
-    else if (i==2 && v.kbdSt==0){
-      if (v.tmr.pPomp==0) v.tmr.pPomp=60;
-      else v.tmr.pPomp=0;
+    else{
+      v.tmr.feed=0; v.tmr.pPomp=60;
     }
-    v.kbdSt=i;
   }
-  v.kbdOld=i;
+  else if (kbdSt==2){
+    if (v.tmr.pPomp==0) v.tmr.pPomp=60;
+    else v.tmr.pPomp=0;
+  }
+  kbdSt=0;
 
   if (hms==c.pPompOnTime){
     v.tmr.pPomp=30; v.tmr.pPompOff=3600;
@@ -428,4 +425,7 @@ function iLogic(){
   digitalWrite(B11,1);
 }
 setTimeout(iLogic,100);
+setWatch(function(){kbdSt=1;},A1,{repeat:true, edge:'rising', debounce:50});
+setWatch(function(){kbdSt=2;},A4,{repeat:true, edge:'rising', debounce:50});
+setWatch(function(){kbdSt=3;},A5,{repeat:true, edge:'rising', debounce:50});
 print(cfg.aplName+" started")
