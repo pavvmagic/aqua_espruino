@@ -1,40 +1,11 @@
-var cfg={ver:1,ch:{t:[435,450,465,480,1020,1035,1050,1320,1335],a:{p:[0,32,32,32,32,32,1.5,1.5,0],m:0},b:{p:[0,4.7,32,63,63,32,4.7,4.7,0],m:0},c:{p:[0,4.7,32,63,63,32,4.7,4.7,0],m:0},d:{p:[0,4.7,32,63,63,32,4.7,4.7,0],m:0}},esp:{ssid:"VVo",key:"4unymuny"},aplPass:"Pi1415926l",aplName:"aLight",iftttKey:"bnHnBWWXYb4cmiAyS6iF_C"};
-stm32f1.enableWatchdog(4.0, false);
-
-function saveConfig(){
-  var d=JSON.stringify(cfg);
-  var i=4-(d.length%4);
-  if (i==3) d+=";;;";
-  else if (i==2) d+=";;";
-  else if (i==1) d+=";";
-  if (d.length<1024){
-    print("config_len:"+d.length);
-    stm32f1.erasePage(0x8000000+((128-25)*1024));
-    stm32f1.write(d,0x8000000+((128-25)*1024));
-    return true;
+function writeConfig(){return require("Storage").write("cfg",cfg);}
+function readConfig(){
+  cfg=require("Storage").readJSON("cfg");
+  if (cfg===undefined){
+    cfg={ver:0,ch:{t:[0,0,0,0,0,0,0,0,0],a:{p:[0,0,0,0,0,0,0,0,0],m:0},b:{p:[0,0,0,0,0,0,0,0,0],m:0},c:{p:[0,0,0,0,0,0,0,0,0],m:0},d:{p:[0,0,0,0,0,0,0,0,0],m:0}},esp:{ssid:"none",key:"none"},aplPass:"none",aplName:"aLight",iftttKey:"none"};
+    writeConfig();
   }
-  return false;
 }
-function loadConfig(){
-  var d="";
-  for (var i=0x8000000+((128-25)*1024);i<0x8000000+((128-25)*1024)+1024;i+=1){
-    var v=peek8(i);
-    if (v!=255) d+=String.fromCharCode(v);
-    else break;
-  }
-  if (d[0]=="{"){
-    var dn=JSON.parse(d);
-    if (cfg.ver!=dn.ver) saveConfig();
-    else cfg=dn;
-  }
-  else saveConfig();
-}
-function eraseAllPages(){for (var i=24;i>0;i--) stm32f1.erasePage(0x8000000+((128-i)*1024));}
-loadConfig();
-
-Serial2.setup(115200);
-var sdata="";
-Serial2.on("data",function(d){if ((d.length+sdata.length)<512) sdata+=d;});
 
 function getUrlPar(u){
   var i,q,s,r={};
@@ -62,15 +33,10 @@ function s2flt(s){
   return i;
 }
 
-var reqStr="";
-var respAns=0;
-var respStr="";
-var respCID=0;
-var aplcode="aplcode";
 function m_txt(v,n){return '<td><input type="text" value='+v+' name='+n+'></td>';}
 function m_btn(v){return '<input type="button" value='+v+' onClick=\'location.href="/config?aplcode='+aplcode+'&cmd='+v+'"\'>';}
 function getResponse(){
-  if (respAns==0){
+  if (respAns===0){
     var i=reqStr.indexOf("GET /");
     var j=reqStr.indexOf(" HTTP/");
     var ra=cfg.aplName;
@@ -81,7 +47,7 @@ function getResponse(){
         aplcode=p.aplcode;
         if (aplcode==cfg.aplPass){
           ra+=": Configuration";
-          if (p.t0!=undefined && p.cmd==undefined){
+          if (p.t0!==undefined && p.cmd===undefined){
             cfg.ch.t[0]=hm2t(p.t0); cfg.ch.t[1]=hm2t(p.t1); cfg.ch.t[2]=hm2t(p.t2); cfg.ch.t[3]=hm2t(p.t3);
             cfg.ch.t[4]=hm2t(p.t4); cfg.ch.t[5]=hm2t(p.t5); cfg.ch.t[6]=hm2t(p.t6); cfg.ch.t[7]=hm2t(p.t7); cfg.ch.t[8]=hm2t(p.t8);
             cfg.ch.a.p[0]=s2flt(p.ap0); cfg.ch.b.p[0]=s2flt(p.bp0); cfg.ch.c.p[0]=s2flt(p.cp0); cfg.ch.d.p[0]=s2flt(p.dp0);
@@ -97,11 +63,11 @@ function getResponse(){
             ra+=": Applyed";
           }
           else if (p.cmd=="save"){
-            if (saveConfig()==true) ra+=": Writed";
+            if (writeConfig()===true) ra+=": Writed";
             else ra+=": Not writed (length>1k)";
           }
           else if (p.cmd=="restore"){
-            loadConfig();
+            readConfig();
             ra+=": Restored";
           }
           else if (p.cmd=="update"){
@@ -109,7 +75,7 @@ function getResponse(){
           }
           else if (p.cmd=="reboot"){
             aplcode="aplcode";
-            setTimeout(function(){reset();},1500);
+            setTimeout(function(){load();},1500);
           }
         }
       }
@@ -126,7 +92,7 @@ function getResponse(){
 '<br></p><form action="config" method="get"><input type="text" value="aplcode" name="aplcode"><input type="submit" value="apply"></form></body></html>');
     return false;
   }
-  else if (respAns==0){
+  else if (respAns===0){
     respStr=('HTTP/1.1 200 OK\r\nServer: '+cfg.aplName+'\r\nContent-Type: text/html\r\n\r\n'+'<html><body><p>'+ra+'<br>'+(new Date()).toUTCString().substr(0,25)+'</p>'+
 '<form action="config" method="get">'+
 '<table><tr><td>Time (hh:mm)</td><td>PWM1</td><td>PWM2</td><td>PWM3</td><td>PWM4</td></tr>'+
@@ -167,10 +133,6 @@ function getResponse(){
   }
 }
 
-var srSt=0;
-var srTmr=0;
-var srData="";
-var srGrSt=false;
 function serverReq(){
   if (sdata.length>0){
     srData+=sdata;
@@ -193,7 +155,7 @@ function serverReq(){
             srSt=1;
           }
           else{
-            if (srTmr==0) srTmr=10;
+            if (srTmr===0) srTmr=10;
             else if (srTmr==1) srData="";
             return;
           }
@@ -207,14 +169,14 @@ function serverReq(){
       Serial2.write('AT+CIPSEND='+respCID+','+respStr.length+'\r\n');
       srSt=2; srTmr=20; break;
     case 2:
-      if ((srData.indexOf(">")>=0) || (srTmr==0)){
+      if ((srData.indexOf(">")>=0) || (srTmr===0)){
         Serial2.write(respStr+'\r\n');
         srSt=3; srTmr=20;
       }
       break;
     case 3:
-      if ((srData.indexOf("SEND OK")>=0) || (srTmr==0)){
-        if (srGrSt==true){srSt=1; srTmr=0;}
+      if ((srData.indexOf("SEND OK")>=0) || (srTmr===0)){
+        if (srGrSt===true){srSt=1; srTmr=0;}
         else{srSt=4; srTmr=0;}
       }
       break;
@@ -232,12 +194,6 @@ function serCmd(cmd,to){
   setTimeout(iSerCmd,to);
 }
 
-var iEspTO=3000;
-
-var iSerCmdV={st:0,conn:0,ifttt:8};
-var IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
-var IftttMsg=["power_restart"];
-var IftttRStr="";
 function iSerCmd(){
   switch (iSerCmdV.st){
     case 0: serCmd("\r\nAT+RST",5000); break;
@@ -260,10 +216,10 @@ function iSerCmd(){
       iSerCmdV.st=-1;
       break;
     case 8:
-      if (IftttMsg.length==0) IftttMsg[0]="time_syncron";
+      if (IftttMsg.length===0) IftttMsg[0]="time_syncron";
       IftttRStr=IftttR[0]+cfg.aplName+IftttR[1]+cfg.iftttKey+"?value1="+IftttMsg[0];
-      if (IftttMsg[1]!=undefined) IftttRStr+="&value2="+IftttMsg[1];
-      if (IftttMsg[2]!=undefined) IftttRStr+="&value3="+IftttMsg[2];
+      if (IftttMsg[1]!==undefined) IftttRStr+="&value2="+IftttMsg[1];
+      if (IftttMsg[2]!==undefined) IftttRStr+="&value3="+IftttMsg[2];
       IftttRStr+=IftttR[2];
       serCmd('AT+CIPSEND=0,'+IftttRStr.length,1000);
       break;
@@ -298,14 +254,12 @@ function iSerCmd(){
   iSerCmdV.st++;
 }
 
-var iVar={espS:"pon",srvR:false,ip:""};
-var iEspTmr;
 function iEsp(){
   switch (iVar.espS){
     case "gtmOK":
     case "gtmNO":
     case "srvOK":
-      if (IftttMsg.length==0) IftttMsg[0]="time_syncron";
+      if (IftttMsg.length===0) IftttMsg[0]="time_syncron";
       print("putIftttMsg: "+IftttMsg);
       iVar.espS="gtmNO";
       iVar.srvR=false;
@@ -330,8 +284,6 @@ function iEsp(){
   iEspTmr=setTimeout(iEsp,iEspTO);
 }
 
-var timeSec=0;
-var wdSerReq=false;
 function iSerReq(){
   var t=parseInt(getTime());
   if (t!=timeSec){
@@ -349,8 +301,6 @@ function lineFunc(chp,i,x,y_min,y_max){
   else return y;
 }
 
-var pChNum=["B6","B7","B8","B9"];
-var pChVal=[0,0,0,0,1];
 function iLight(){
   digitalWrite(B11,0);
 
@@ -369,7 +319,7 @@ function iLight(){
   }
   if(cv!=pChVal[4]){pChVal[4]=cv; digitalWrite(A4,!cv); digitalWrite(A6,cv);}
 
-  if (wdSerReq==true){
+  if (wdSerReq===true){
     stm32f1.kickWatchdog();
     wdSerReq=false;
   }
@@ -377,17 +327,54 @@ function iLight(){
   digitalWrite(B11,1);
 }
 
-digitalWrite(B12,1);/*esp_rst*/
-digitalWrite(A4,0);/*sys_cool_on*/
-digitalWrite(A6,1);/*led_cool_on*/
-analogWrite(pChNum[0],0.0,{freq:400});
-analogWrite(pChNum[1],0.0,{freq:400});
-analogWrite(pChNum[2],0.0,{freq:400});
-analogWrite(pChNum[3],0.0,{freq:400});
-setTimeout(iEsp,iEspTO);
-setTimeout(iSerReq,100);
-setTimeout(iLight,1000);
+function start(){
+  readConfig();
+  stm32f1.enableWatchdog(4.0, false);
 
-print(cfg.aplName+" started");
-print("JS:"+process.version+" 1.0/"+cfg.ver);
+  Serial2.setup(115200);
+  sdata="";
+  Serial2.on("data",function(d){if ((d.length+sdata.length)<512) sdata+=d;});
+
+  reqStr="";
+  respAns=0;
+  respStr="";
+  respCID=0;
+  aplcode="aplcode";
+
+  srSt=0;
+  srTmr=0;
+  srData="";
+  srGrSt=false;
+
+  iEspTO=3000;
+
+  iSerCmdV={st:0,conn:0,ifttt:8};
+  IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
+  IftttMsg=["power_restart"];
+  IftttRStr="";
+
+  iVar={espS:"pon",srvR:false,ip:""};
+  iEspTmr=undefined;
+
+  timeSec=0;
+  wdSerReq=false;
+
+  pChNum=["B6","B7","B8","B9"];
+  pChVal=[0,0,0,0,1];
+
+  digitalWrite(B12,1);/*esp_rst*/
+  digitalWrite(A4,0);/*sys_cool_on*/
+  digitalWrite(A6,1);/*led_cool_on*/
+  analogWrite(pChNum[0],0.0,{freq:400});
+  analogWrite(pChNum[1],0.0,{freq:400});
+  analogWrite(pChNum[2],0.0,{freq:400});
+  analogWrite(pChNum[3],0.0,{freq:400});
+  setTimeout(iEsp,iEspTO);
+  setTimeout(iSerReq,100);
+  setTimeout(iLight,1000);
+}
+
+start();
+print(cfg.aplName+" started!");
+print("JS:"+process.version+" 2.0/"+cfg.ver);
 print((new Date()).toUTCString());
