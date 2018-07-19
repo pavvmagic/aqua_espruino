@@ -7,7 +7,7 @@ import time # Старый низкоуровневый модуль
 import datetime # Новый модуль для работы с датой и временем
 from subprocess import call
 
-version = 0.1
+version = 0.2
 
 FLASH_START = 0x08000000
 FLASH_SIZE_KB=128
@@ -85,7 +85,13 @@ class CommandInterface(object):
             else:
                 n-=1024
             pg-=1
-        self.sp.write("\recho(true);\r"+str(cfg)+"\rrequire(\"Storage\").write(\"cfg\",cfg);\rload();\r")
+        self.sp.write("\recho(true);\r"+str(cfg)+"\r")
+        time.sleep(1.0)
+        print(self.sp.read(1000))
+        self.sp.write("require(\"Storage\").write(\"cfg\",cfg);\r")
+        time.sleep(1.0)
+        print(self.sp.read(1000))
+        self.sp.write("load();\r")
         time.sleep(2.0)
         print(self.sp.read(1000))
         self.sp.close()
