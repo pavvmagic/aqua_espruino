@@ -56,57 +56,48 @@ function getResponse(){
             cfg.ch.a.c=s2int(p.chac); cfg.ch.b.c=s2int(p.chbc); cfg.ch.c.c=s2int(p.chcc); cfg.ch.d.c=s2int(p.chdc);
             cfg.ch.a.a=p.chaa; cfg.ch.b.a=p.chba; cfg.ch.c.a=p.chca; cfg.ch.d.a=p.chda;
             ra+=": Applyed";
-          }
-          else if (p.cmd=="save"){
+          } else if (p.cmd=="save"){
             if (saveConfig()===true) ra+=": Writed";
             else ra+=": Not writed";
-          }
-          else if (p.cmd=="restore"){
+          } else if (p.cmd=="restore"){
             loadConfig();
             ra+=": Restored";
-          }
-          else if (p.cmd=="ch1cal"){
+          } else if (p.cmd=="ch1cal"){
             ra+=": Calibration ch1";
             if (pChStTO===0)
               pChCal[0]=true;
             else{
               pChStTO=1; ra+=": Denied";
             }
-          }
-          else if (p.cmd=="ch2cal"){
+          } else if (p.cmd=="ch2cal"){
             ra+=": Calibration ch2";
             if (pChStTO===0)
               pChCal[1]=true;
             else{
               pChStTO=1; ra+=": Denied";
             }
-          }
-          else if (p.cmd=="ch3cal"){
+          } else if (p.cmd=="ch3cal"){
             ra+=": Calibration ch3";
             if (pChStTO===0)
               pChCal[2]=true;
             else{
               pChStTO=1; ra+=": Denied";
             }
-          }
-          else if (p.cmd=="ch4cal"){
+          } else if (p.cmd=="ch4cal"){
             ra+=": Calibration ch4";
             if (pChStTO===0)
               pChCal[3]=true;
             else{
               pChStTO=1; ra+=": Denied";
             }
-          }
-          else if (p.cmd=="update"){
+          } else if (p.cmd=="update"){
             ra+=": Updated";
-          }
-          else if (p.cmd=="reboot"){
+          } else if (p.cmd=="reboot"){
             aplcode="aplcode";
-            setTimeout(function(){reset();},1500);
+            setTimeout(function(){load();},1500);
           }
         }
-      }
-      else if (reqStr.indexOf("favicon.ico",i+5)>=0){
+      } else if (reqStr.indexOf("favicon.ico",i+5)>=0){
         respStr=('HTTP/1.1 200 OK\r\nServer: '+cfg.aplName+'\r\nContent-Type: image/x-icon\r\n\r\n'+
 '\0\0\1\0\1\0\20\20\20\0\1\0\4\0(\1\0\0\26\0\0\0(\0\0\0\20\0\0\0 \0\0\0\1\0\4\0\0\0\0\0\x80\0\0\0\0\0\0\0\0\0\0\0\20\0\0\0\0\0\0\0\0\0\0\0\xff\0]\0\xff\xdd\0\0M\xff\0\0\0\0\xff\0\0\xf2\xff\0\0\x8c\xff\0\xa8\0\x81\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0ff`\0\0\0\0\0\0\0\0\0\0\0\0DDD@\0@\0\6fff`\6`\0U\5UUUUP\0\3\x03333\x030\0\0\"\"\"\0\0 \0\0\0\0\0\0\0\0\0\0\0\21\21\0\0\0\0\0\0\7p\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\xff\xff\0\0\xff\xff\0\0\xff\xff\0\0\xfc\37\0\0\xf8\17\0\0\xf0\14\0\0\xe0\10\0\0\xc0\0\0\0\x80\0\0\0\xc0\0\0\0\xe0\10\0\0\xf0\34\0\0\xf8\36\0\0\xfc?\0\0\xfe\x7f\0\0\xff\xff\0\0');
         return false;
@@ -118,8 +109,7 @@ function getResponse(){
     respStr=('HTTP/1.1 200 OK\r\nServer: '+cfg.aplName+'\r\nContent-Type: text/html\r\n\r\n'+'<html><body><p>'+cfg.aplName+
 '<br></p><form action="config" method="get"><input type="text" value="aplcode" name="aplcode"><input type="submit" value="apply"></form></body></html>');
     return false;
-  }
-  else if (respAns===0){
+  } else if (respAns===0){
     respStr=('HTTP/1.1 200 OK\r\nServer: '+cfg.aplName+'\r\nContent-Type: text/html\r\n\r\n'+'<html><body><p>'+ra+'<br>'+(new Date()).toUTCString().substr(0,25)+'</p>'+
 '<form action="config" method="get">'+
 '<table><tr><td>Time (hh:mm)</td><td>Volume (mL)</td><td>Note</td></tr>'+
@@ -129,21 +119,18 @@ function getResponse(){
 '<tr>'+m_txt(t2hm(cfg.ch.d.t),"chdt")+m_txt(cfg.ch.d.n,"chdn")+m_txt(cfg.ch.d.a,"chda")+'</tr></table><br>');
     respAns++;
     return true;
-  }
-  else if (respAns==1){
+  } else if (respAns==1){
     respStr=('<table><tr><td>Calibration: </td><td>Flow rate (mL/min)</td><td>Capacity (mL)</td></tr>'+
 '<tr><td>'+m_btn("ch1cal")+'</td>'+m_txt(cfg.ch.a.m,"cham")+m_txt(cfg.ch.a.c,"chac")+'</tr>'+
 '<tr><td>'+m_btn("ch2cal")+'</td>'+m_txt(cfg.ch.b.m,"chbm")+m_txt(cfg.ch.b.c,"chbc")+'</tr>');
     respAns++;
     return true;
-  }
-  else if (respAns==2){
+  } else if (respAns==2){
     respStr=('<tr><td>'+m_btn("ch3cal")+'</td>'+m_txt(cfg.ch.c.m,"chcm")+m_txt(cfg.ch.c.c,"chcc")+'</tr>'+
 '<tr><td>'+m_btn("ch4cal")+'</td>'+m_txt(cfg.ch.d.m,"chdm")+m_txt(cfg.ch.d.c,"chdc")+'</tr></table><br>');
     respAns++;
     return true;
-  }
-  else{
+  } else{
     respStr=('<input type="hidden" value='+aplcode+' name="aplcode">'+
 '<input type="submit" value="apply">'+' '+m_btn("save")+' '+m_btn("restore")+' '+m_btn("reboot")+' '+m_btn("update")+'</form></body></html>');
     respAns=0;
@@ -170,9 +157,9 @@ function serverReq(){
             print(reqStr);
             respAns=0;
             srTmr=0;
+            srGrSt=true;
             srSt=1;
-          }
-          else{
+          } else{
             if (srTmr===0) srTmr=10;
             else if (srTmr==1) srData="";
             return;
@@ -181,23 +168,22 @@ function serverReq(){
       }
       break;
     case 1:
-      srGrSt=getResponse();
-      reqStr="";
-      print("resp.length:"+respStr.length);
-      Serial2.write('AT+CIPSEND='+respCID+','+respStr.length+'\r\n');
-      srSt=2; break;
-    case 2:
-      Serial2.write(respStr+'\r\n');
-      srSt=3; srTmr=30; break;
-    case 3:
       if ((srData.indexOf("SEND OK")>=0) || (srTmr===0)){
-        if (srGrSt===true){srSt=1; srTmr=0;}
-        else{srSt=4; srTmr=0;}
+        if (srGrSt===true){
+          srGrSt=getResponse();
+          reqStr="";
+          print("resp.length:"+respStr.length);
+          Serial2.write('AT+CIPSEND='+respCID+','+respStr.length+'\r\n');
+          srSt=2; srTmr=20;
+        } else{srSt=0; srTmr=0;}
       }
       break;
-    case 4:
-      /*Serial2.write('AT+CIPCLOSE='+respCID+'\r\n');*/
-      srSt=0; break;
+    case 2:
+      if ((srData.indexOf(">")>=0) || (srTmr===0)){
+        Serial2.write(respStr+'\r\n');
+        srSt=1; srTmr=20;
+      }
+      break;
     default: srSt=0;
   }
   srData="";
@@ -255,7 +241,7 @@ function iSerCmd(){
       var i=sdata.indexOf("Date: ");
       if (i>=0){
         var s=sdata.substr(i+6,25).split(' ');
-        setTime(Date.parse(s[2]+' '+s[1]+', '+s[3]+' '+s[4]+' -0300')/1000);
+        setTime(Date.parse(s[2]+' '+s[1]+', '+s[3]+' '+s[4]+' -0300')/1000+10);
         print((new Date()).toUTCString());
         iVar.espS="gtmOK";
         iVar.srvR=true;
@@ -290,22 +276,18 @@ function iLcd1(){
   var s=iHlcd[iHlcdi];
   lcd_wr(0x80,1);
   for (var i=0;i<16;i++){
-    if (i<s.length)
-      lcd_wr(s.charCodeAt(i));
-    else
-      lcd_wr(0x20);
+    if (i<s.length) lcd_wr(s.charCodeAt(i));
+    else lcd_wr(0x20);
   }
   setTimeout(iLcd2,400);
 }
 function iLcd2(){
   var s=(new Date()).toISOString().substr(11,8);
   lcd_wr(0xC0,1);
-  for (var i=0;i<8;i++)
-    lcd_wr(s.charCodeAt(i));
+  for (var i=0;i<8;i++) lcd_wr(s.charCodeAt(i));
   lcd_wr(0x20);
   s=logicLcd.join('');
-  for (i=0;i<7;i++)
-    lcd_wr(s.charCodeAt(i));
+  for (i=0;i<7;i++) lcd_wr(s.charCodeAt(i));
   iLcdTmr=0;
 }
 
@@ -389,8 +371,7 @@ function pChX(t,c,n){
       iLcdExUpd();
       return true;
     }
-  }
-  else if (pChCal[n]===true){
+  } else if (pChCal[n]===true){
     if (n===0 || n==3) analogWrite(pChNum[n],1.0,{freq: 1000});
     else analogWrite(pChNum[n],0.7,{freq: 1000});
     logicLcd[0]='c'; logicLcd[1]=n+1; logicLcd[3+n]='\xEF';
@@ -400,9 +381,7 @@ function pChX(t,c,n){
     lcdO.chn="Calibr: Chan"+(n+1);
     iLcdExUpd();
     return true;
-  }
-  else
-    pChSt[n]=false;
+  } else pChSt[n]=false;
   return false;
 }
 function iPump(){
@@ -425,8 +404,7 @@ function iPump(){
       delete lcdO.chn;
       iLcdExUpd();
     }
-  }
-  else{
+  } else{
     var th=parseInt(timeSec/60%1440);
     if (pChX(th,cfg.ch.a,0)===false){
       if (pChX(th,cfg.ch.b,1)===false){
@@ -466,7 +444,7 @@ function start(){
 
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 1.4/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 2.0/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -503,3 +481,5 @@ function start(){
 
 start();
 print(cfg.aplName+" started");
+print(lcdO.ver);
+print((new Date()).toUTCString());
