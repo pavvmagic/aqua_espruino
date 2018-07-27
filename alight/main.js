@@ -61,25 +61,20 @@ function getResponse(){
             cfg.ch.a.p[8]=s2flt(p.ap8); cfg.ch.b.p[8]=s2flt(p.bp8); cfg.ch.c.p[8]=s2flt(p.cp8); cfg.ch.d.p[8]=s2flt(p.dp8);
             cfg.ch.a.m=s2flt(p.am); cfg.ch.b.m=s2flt(p.bm); cfg.ch.c.m=s2flt(p.cm); cfg.ch.d.m=s2flt(p.dm);
             ra+=": Applyed";
-          }
-          else if (p.cmd=="save"){
+          } else if (p.cmd=="save"){
             if (writeConfig()===true) ra+=": Writed";
-            else ra+=": Not writed (length>1k)";
-          }
-          else if (p.cmd=="restore"){
+            else ra+=": Not writed";
+          } else if (p.cmd=="restore"){
             readConfig();
             ra+=": Restored";
-          }
-          else if (p.cmd=="update"){
+          } else if (p.cmd=="update"){
             ra+=": Updated";
-          }
-          else if (p.cmd=="reboot"){
+          } else if (p.cmd=="reboot"){
             aplcode="aplcode";
             setTimeout(function(){load();},1500);
           }
         }
-      }
-      else if (reqStr.indexOf("favicon.ico",i+5)>=0){
+      } else if (reqStr.indexOf("favicon.ico",i+5)>=0){
         respStr=('HTTP/1.1 200 OK\r\nServer: '+cfg.aplName+'\r\nContent-Type: image/x-icon\r\n\r\n'+
 '\0\0\1\0\1\0\20\20\20\0\1\0\4\0(\1\0\0\26\0\0\0(\0\0\0\20\0\0\0 \0\0\0\1\0\4\0\0\0\0\0\x80\0\0\0\0\0\0\0\0\0\0\0\20\0\0\0\0\0\0\0\0\0\0\0\xff\0]\0\xff\xdd\0\0M\xff\0\0\0\0\xff\0\0\xf2\xff\0\0\x8c\xff\0\xa8\0\x81\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0ff`\0\0\0\0\0\0\0\0\0\0\0\0DDD@\0@\0\6fff`\6`\0U\5UUUUP\0\3\x03333\x030\0\0\"\"\"\0\0 \0\0\0\0\0\0\0\0\0\0\0\21\21\0\0\0\0\0\0\7p\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\xff\xff\0\0\xff\xff\0\0\xff\xff\0\0\xfc\37\0\0\xf8\17\0\0\xf0\14\0\0\xe0\10\0\0\xc0\0\0\0\x80\0\0\0\xc0\0\0\0\xe0\10\0\0\xf0\34\0\0\xf8\36\0\0\xfc?\0\0\xfe\x7f\0\0\xff\xff\0\0');
         return false;
@@ -91,8 +86,7 @@ function getResponse(){
     respStr=('HTTP/1.1 200 OK\r\nServer: '+cfg.aplName+'\r\nContent-Type: text/html\r\n\r\n'+'<html><body><p>'+cfg.aplName+
 '<br></p><form action="config" method="get"><input type="text" value="aplcode" name="aplcode"><input type="submit" value="apply"></form></body></html>');
     return false;
-  }
-  else if (respAns===0){
+  } else if (respAns===0){
     respStr=('HTTP/1.1 200 OK\r\nServer: '+cfg.aplName+'\r\nContent-Type: text/html\r\n\r\n'+'<html><body><p>'+ra+'<br>'+(new Date()).toUTCString().substr(0,25)+'</p>'+
 '<form action="config" method="get">'+
 '<table><tr><td>Time (hh:mm)</td><td>PWM1</td><td>PWM2</td><td>PWM3</td><td>PWM4</td></tr>'+
@@ -100,32 +94,27 @@ function getResponse(){
 '<tr>'+m_txt(t2hm(cfg.ch.t[1]),"t1")+m_txt(cfg.ch.a.p[1],"ap1")+m_txt(cfg.ch.b.p[1],"bp1")+m_txt(cfg.ch.c.p[1],"cp1")+m_txt(cfg.ch.d.p[1],"dp1")+'</tr>');
     respAns++;
     return true;
-  }
-  else if (respAns==1){
+  } else if (respAns==1){
     respStr=('<tr>'+m_txt(t2hm(cfg.ch.t[2]),"t2")+m_txt(cfg.ch.a.p[2],"ap2")+m_txt(cfg.ch.b.p[2],"bp2")+m_txt(cfg.ch.c.p[2],"cp2")+m_txt(cfg.ch.d.p[2],"dp2")+'</tr>'+
 '<tr>'+m_txt(t2hm(cfg.ch.t[3]),"t3")+m_txt(cfg.ch.a.p[3],"ap3")+m_txt(cfg.ch.b.p[3],"bp3")+m_txt(cfg.ch.c.p[3],"cp3")+m_txt(cfg.ch.d.p[3],"dp3")+'</tr>');
     respAns++;
     return true;
-  }
-  else if (respAns==2){
+  } else if (respAns==2){
     respStr=('<tr>'+m_txt(t2hm(cfg.ch.t[4]),"t4")+m_txt(cfg.ch.a.p[4],"ap4")+m_txt(cfg.ch.b.p[4],"bp4")+m_txt(cfg.ch.c.p[4],"cp4")+m_txt(cfg.ch.d.p[4],"dp4")+'</tr>'+
 '<tr>'+m_txt(t2hm(cfg.ch.t[5]),"t5")+m_txt(cfg.ch.a.p[5],"ap5")+m_txt(cfg.ch.b.p[5],"bp5")+m_txt(cfg.ch.c.p[5],"cp5")+m_txt(cfg.ch.d.p[5],"dp5")+'</tr>');
     respAns++;
     return true;
-  }
-  else if (respAns==3){
+  } else if (respAns==3){
     respStr=('<tr>'+m_txt(t2hm(cfg.ch.t[6]),"t6")+m_txt(cfg.ch.a.p[6],"ap6")+m_txt(cfg.ch.b.p[6],"bp6")+m_txt(cfg.ch.c.p[6],"cp6")+m_txt(cfg.ch.d.p[6],"dp6")+'</tr>'+
 '<tr>'+m_txt(t2hm(cfg.ch.t[7]),"t7")+m_txt(cfg.ch.a.p[7],"ap7")+m_txt(cfg.ch.b.p[7],"bp7")+m_txt(cfg.ch.c.p[7],"cp7")+m_txt(cfg.ch.d.p[7],"dp7")+'</tr>');
     respAns++;
     return true;
-  }
-  else if (respAns==4){
+  } else if (respAns==4){
     respStr=('<tr>'+m_txt(t2hm(cfg.ch.t[8]),"t8")+m_txt(cfg.ch.a.p[8],"ap8")+m_txt(cfg.ch.b.p[8],"bp8")+m_txt(cfg.ch.c.p[8],"cp8")+m_txt(cfg.ch.d.p[8],"dp8")+'</tr>'+
 '<tr><td>Minimum:</td>'+m_txt(cfg.ch.a.m,"am")+m_txt(cfg.ch.b.m,"bm")+m_txt(cfg.ch.c.m,"cm")+m_txt(cfg.ch.d.m,"dm")+'</tr>'+'</table><br>');
     respAns++;
     return true;
-  }
-  else{
+  } else{
     respStr=('<input type="hidden" value='+aplcode+' name="aplcode">'+
 '<input type="submit" value="apply">'+' '+m_btn("save")+' '+m_btn("restore")+' '+m_btn("reboot")+' '+m_btn("update")+'</form></body></html>');
     respAns=0;
@@ -152,9 +141,9 @@ function serverReq(){
             print(reqStr);
             respAns=0;
             srTmr=0;
+            srGrSt=true;
             srSt=1;
-          }
-          else{
+          } else{
             if (srTmr===0) srTmr=10;
             else if (srTmr==1) srData="";
             return;
@@ -163,26 +152,22 @@ function serverReq(){
       }
       break;
     case 1:
-      srGrSt=getResponse();
-      reqStr="";
-      print("resp.length:"+respStr.length);
-      Serial2.write('AT+CIPSEND='+respCID+','+respStr.length+'\r\n');
-      srSt=2; srTmr=20; break;
+      if ((srData.indexOf("SEND OK")>=0) || (srTmr===0)){
+        if (srGrSt===true){
+          srGrSt=getResponse();
+          reqStr="";
+          print("resp.length:"+respStr.length);
+          Serial2.write('AT+CIPSEND='+respCID+','+respStr.length+'\r\n');
+          srSt=2; srTmr=20;
+        } else{srSt=0; srTmr=0;}
+      }
+      break;
     case 2:
       if ((srData.indexOf(">")>=0) || (srTmr===0)){
         Serial2.write(respStr+'\r\n');
-        srSt=3; srTmr=20;
+        srSt=1; srTmr=20;
       }
       break;
-    case 3:
-      if ((srData.indexOf("SEND OK")>=0) || (srTmr===0)){
-        if (srGrSt===true){srSt=1; srTmr=0;}
-        else{srSt=4; srTmr=0;}
-      }
-      break;
-    case 4:
-      /*Serial2.write('AT+CIPCLOSE='+respCID+'\r\n');*/
-      srSt=0; break;
     default: srSt=0;
   }
   srData="";
@@ -226,8 +211,7 @@ function iSerCmd(){
     case 9:
       if (sdata.indexOf(">")>=0){
         serCmd(IftttRStr,10000);
-      }
-      else{
+      } else{
         iVar.srvR=true;
         iSerCmdV.st=-1;
       }
@@ -236,17 +220,14 @@ function iSerCmd(){
       var i=sdata.indexOf("Date: ");
       if (i>=0){
         var s=sdata.substr(i+6,25).split(' ');
-        setTime(Date.parse(s[2]+' '+s[1]+', '+s[3]+' '+s[4]+' -0300')/1000);
+        setTime(Date.parse(s[2]+' '+s[1]+', '+s[3]+' '+s[4]+' -0300')/1000+10);
         print((new Date()).toUTCString());
         iVar.espS="gtmOK";
         iVar.srvR=true;
         IftttMsg=[];
         iEspTO=24*60*60*1000;
-        clearTimeout(iEspTmr);
-        iEspTmr=setTimeout(iEsp,iEspTO);
-      }
-      else
-        iVar.srvR=true;
+        iEspTimeout(iEspTO);
+      } else iVar.srvR=true;
       iSerCmdV.st=-1;
       break;
     default: iSerCmdV.st=-1;
@@ -254,10 +235,13 @@ function iSerCmd(){
   iSerCmdV.st++;
 }
 
+function iEspTimeout(timeout){
+  if (iEspTmr!==undefined) clearTimeout(iEspTmr);
+  iEspTmr=setTimeout(iEsp,timeout);
+}
 function iEsp(){
   switch (iVar.espS){
     case "gtmOK":
-    case "gtmNO":
     case "srvOK":
       if (IftttMsg.length===0) IftttMsg[0]="time_syncron";
       print("putIftttMsg: "+IftttMsg);
@@ -267,6 +251,7 @@ function iEsp(){
       iSerCmdV.st=iSerCmdV.ifttt;
       serCmd('AT+CIPSTART=0,"TCP","maker.ifttt.com",80',1000);
       break;
+    case "gtmNO":
     case "srvNO":
     case "pon":
       print("connect to "+cfg.esp.ssid);
@@ -376,5 +361,5 @@ function start(){
 
 start();
 print(cfg.aplName+" started!");
-print("JS:"+process.version+" 2.0/"+cfg.ver);
+print("JS:"+process.version+" 2.1/"+cfg.ver);
 print((new Date()).toUTCString());
