@@ -1,12 +1,10 @@
-/*reset(true);*/
-function saveConfig(){return require("Storage").write("cfg",cfg);}
-function loadConfig(){
-  var cfg0=require("Storage").readJSON("cfg");
-  if (cfg0!==undefined){
-    if (cfg.ver!=cfg0.ver) saveConfig();
-    else cfg=cfg0;
+function writeConfig(){return require("Storage").write("cfg",cfg);}
+function readConfig(){
+  cfg=require("Storage").readJSON("cfg");
+  if (cfg===undefined){
+    cfg={ver:0,ch:{a:{t:0,n:0,m:0,c:0,a:"note"},b:{t:0,n:0,m:0,c:0,a:"note"},c:{t:0,n:0,m:0,c:0,a:"note"},d:{t:0,n:0,m:0,c:0,a:"note"}},esp:{ssid:"none",key:"none"},aplPass:"none",aplName:"aDispenser",iftttKey:"none"};
+    writeConfig();
   }
-  else saveConfig();
 }
 
 function getUrlPar(u){
@@ -57,10 +55,10 @@ function getResponse(){
             cfg.ch.a.a=p.chaa; cfg.ch.b.a=p.chba; cfg.ch.c.a=p.chca; cfg.ch.d.a=p.chda;
             ra+=": Applyed";
           } else if (p.cmd=="save"){
-            if (saveConfig()===true) ra+=": Writed";
+            if (writeConfig()===true) ra+=": Writed";
             else ra+=": Not writed";
           } else if (p.cmd=="restore"){
-            loadConfig();
+            readConfig();
             ra+=": Restored";
           } else if (p.cmd=="ch1cal"){
             ra+=": Calibration ch1";
@@ -231,8 +229,7 @@ function iSerCmd(){
     case 9:
       if (sdata.indexOf(">")>=0){
         serCmd(IftttRStr,10000);
-      }
-      else{
+      } else{
         iVar.srvR=true;
         iSerCmdV.st=-1;
       }
@@ -247,18 +244,65 @@ function iSerCmd(){
         iVar.srvR=true;
         IftttMsg=[];
         iEspTO=24*60*60*1000;
-        clearTimeout(iEspTmr);
-        iEspTmr=setTimeout(iEsp,iEspTO);
+        iEspTimeout(iEspTO);
         delete lcdO.msg;
         iLcdExUpd();
-      }
-      else
-        iVar.srvR=true;
+      } else iVar.srvR=true;
       iSerCmdV.st=-1;
       break;
     default: iSerCmdV.st=-1;
   }
   iSerCmdV.st++;
+}
+
+function iEspTimeout(timeout){
+  if (iEspTmr!==undefined) clearTimeout(iEspTmr);
+  iEspTmr=setTimeout(iEsp,timeout);
+}
+function iEsp(){
+  switch (iVar.espS){
+    case "gtmOK":
+    case "srvOK":
+      if (IftttMsg.length===0) IftttMsg[0]="time_syncron";
+      print("putIftttMsg: "+IftttMsg);
+      lcdO.msg="M: "+IftttMsg[0];
+      iLcdExUpd();
+      iVar.espS="gtmNO";
+      iVar.srvR=false;
+      iEspTO=60000;
+      iSerCmdV.st=iSerCmdV.ifttt;
+      serCmd('AT+CIPSTART=0,"TCP","maker.ifttt.com",80',1000);
+      break;
+    case "gtmNO":
+    case "srvNO":
+    case "pon":
+      print("connect to "+cfg.esp.ssid);
+      lcdO.msg="M: "+cfg.esp.ssid+" Conn...";
+      iLcdExUpd();
+      iVar.espS="srvNO";
+      iVar.srvR=false;
+      iEspTO=60000;
+      iSerCmdV.st=iSerCmdV.conn;
+      serCmd("\r\nAT+RST",5000);
+      break;
+    default:
+      iVar.espS="srvNO";
+      iVar.srvR=false;
+      iEspTO=1000;
+  }
+  iEspTmr=setTimeout(iEsp,iEspTO);
+}
+
+function iSerReq(){
+  var t=parseInt(getTime());
+  if (t!=timeSec){
+    timeSec=t;
+    if (iLcdTmr===0) iLcdTmr=setTimeout(iLcd1,100);
+  }
+  shortVAv4=(analogRead(A6)*6.6-(shortVAv4/4))+shortVAv4;
+  if (iVar.srvR) serverReq();
+  setTimeout(iSerReq,100);
+  wdSerReq=true;
 }
 
 function lcd_wr(x,c){
@@ -305,52 +349,6 @@ function iLcdEx(){
   setTimeout(iLcdEx,4000);
 }
 
-function iEsp(){
-  switch (iVar.espS){
-    case "gtmOK":
-    case "gtmNO":
-    case "srvOK":
-      if (IftttMsg.length===0) IftttMsg[0]="time_syncron";
-      print("putIftttMsg: "+IftttMsg);
-      lcdO.msg="M: "+IftttMsg[0];
-      iLcdExUpd();
-      iVar.espS="gtmNO";
-      iVar.srvR=false;
-      iEspTO=60000;
-      iSerCmdV.st=iSerCmdV.ifttt;
-      serCmd('AT+CIPSTART=0,"TCP","maker.ifttt.com",80',1000);
-      break;
-    case "srvNO":
-    case "pon":
-      print("connect to "+cfg.esp.ssid);
-      lcdO.msg="M: "+cfg.esp.ssid+" Conn...";
-      iLcdExUpd();
-      iVar.espS="srvNO";
-      iVar.srvR=false;
-      iEspTO=60000;
-      iSerCmdV.st=iSerCmdV.conn;
-      serCmd("\r\nAT+RST",5000);
-      break;
-    default:
-      iVar.espS="srvNO";
-      iVar.srvR=false;
-      iEspTO=1000;
-  }
-  iEspTmr=setTimeout(iEsp,iEspTO);
-}
-
-function iSerReq(){
-  var t=parseInt(getTime());
-  if (t!=timeSec){
-    timeSec=t;
-    if (iLcdTmr===0) iLcdTmr=setTimeout(iLcd1,100);
-  }
-  shortVAv4=(analogRead(A6)*6.6-(shortVAv4/4))+shortVAv4;
-  if (iVar.srvR) serverReq();
-  setTimeout(iSerReq,100);
-  wdSerReq=true;
-}
-
 function pChX(t,c,n){
   if (c.n!==0 && c.m!==0 && t==c.t){
     if (pChSt[n]===false){
@@ -363,8 +361,7 @@ function pChX(t,c,n){
       if (c.c<0) c.c=0;
       if (c.c<(c.n*3)){
         IftttMsg[IftttMsg.length]="ch_"+(n+1)+"_low_lev";
-        if (iEspTmr) clearTimeout(iEspTmr);
-        iEspTmr=setTimeout(iEsp,10*60000);
+        iEspTimeout(10*60000);
       }
       pChSt[n]=true;
       lcdO.chn="Pomp: Chan"+(n+1);
@@ -393,8 +390,7 @@ function iPump(){
       if (shortVAv4<10){
         logicLcd[2+i]='x';
         IftttMsg[IftttMsg.length]="ch_"+i+"_alarm";
-        if (iEspTmr!==undefined) clearTimeout(iEspTmr);
-        iEspTmr=setTimeout(iEsp,10000);
+        iEspTimeout(10000);
       }
       pChStTO=0;
       analogWrite(pChNum[0],0.0,{freq: 1000});
@@ -423,8 +419,7 @@ function iPump(){
 }
 
 function start(){
-  cfg={ver:1,ch:{a:{t:0,n:0,m:0,c:0,a:"note"},b:{t:0,n:0,m:0,c:0,a:"note"},c:{t:0,n:0,m:0,c:0,a:"note"},d:{t:0,n:0,m:0,c:0,a:"note"}},esp:{ssid:"VVo",key:"4unymuny"},aplPass:"Pi1415926d",aplName:"aDispenser",iftttKey:"bnHnBWWXYb4cmiAyS6iF_C"};
-  loadConfig();
+  readConfig();
   stm32f1.enableWatchdog(4.0, false);
 
   Serial2.setup(115200);
@@ -444,7 +439,7 @@ function start(){
 
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 2.0/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 2.1/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
