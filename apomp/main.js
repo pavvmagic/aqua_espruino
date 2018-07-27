@@ -48,8 +48,7 @@ function iSerCmd(){
     case 9:
       if (sdata.indexOf(">")>=0){
         serCmd(IftttRStr,10000);
-      }
-      else{
+      } else{
         iVar.srvR=true;
         iSerCmdV.st=-1;
       }
@@ -58,7 +57,7 @@ function iSerCmd(){
       var i=sdata.indexOf("Date: ");
       if (i>=0){
         var s=sdata.substr(i+6,25).split(' ');
-        setTime(Date.parse(s[2]+' '+s[1]+', '+s[3]+' '+s[4]+' -0300')/1000);
+        setTime(Date.parse(s[2]+' '+s[1]+', '+s[3]+' '+s[4]+' -0300')/1000+10);
         print((new Date()).toUTCString());
         iVar.espS="gtmOK";
         iVar.srvR=true;
@@ -68,9 +67,7 @@ function iSerCmd(){
         delete lcdO.msg;
         delete lcdO.ip;
         iLcdExUpd();
-      }
-      else
-        iVar.srvR=true;
+      } else iVar.srvR=true;
       iSerCmdV.st=-1;
       break;
     default: iSerCmdV.st=-1;
@@ -93,22 +90,18 @@ function iLcd1(){
   var s=iHlcd[iHlcdi];
   lcd_wr(0x80,1);
   for (var i=0;i<16;i++){
-    if (i<s.length)
-      lcd_wr(s.charCodeAt(i));
-    else
-      lcd_wr(0x20);
+    if (i<s.length) lcd_wr(s.charCodeAt(i));
+    else lcd_wr(0x20);
   }
   setTimeout(iLcd2,400);
 }
 function iLcd2(){
   var s=(new Date()).toISOString().substr(11,8);
   lcd_wr(0xC0,1);
-  for (var i=0;i<8;i++)
-    lcd_wr(s.charCodeAt(i));
+  for (var i=0;i<8;i++) lcd_wr(s.charCodeAt(i));
   lcd_wr(0x20);
   s=logicLcd.join('');
-  for (i=0;i<3;i++)
-    lcd_wr(s.charCodeAt(i));
+  for (i=0;i<3;i++) lcd_wr(s.charCodeAt(i));
   lcd_wr(0x20);
   if ((inpOld&1)===0) lcd_wr(0xEE);
   else lcd_wr(0xEF);
@@ -140,7 +133,6 @@ function iEspTimeout(timeout){
 function iEsp(){
   switch (iVar.espS){
     case "gtmOK":
-    case "gtmNO":
     case "srvOK":
       if (IftttMsg.length===0) IftttMsg[0]="time_syncron";
       print("putIftttMsg: "+IftttMsg);
@@ -152,6 +144,7 @@ function iEsp(){
       iSerCmdV.st=iSerCmdV.ifttt;
       serCmd('AT+CIPSTART=0,"TCP","maker.ifttt.com",80',1000);
       break;
+    case "gtmNO":
     case "srvNO":
     case "pon":
       print("connect to "+cfg.esp.ssid);
@@ -188,15 +181,13 @@ function iLogic(){
   v.powVAv4=(analogRead(A6)*40.425-(v.powVAv4/4))+v.powVAv4;
 
   w.on=1;
-  if (parseInt(hms/3600)>=8) {
-    if (parseInt(hms/3600)>=21) {
+  if (parseInt(hms/3600)>=8){
+    if (parseInt(hms/3600)>=21){
       if (w.cnfg.n!=1) w.cnfg={n:1,dt:1,level:0.47,ampl:0};
-    }
-    else {
+    } else{
       if (w.cnfg.n!=2) w.cnfg={n:2,dt:1,level:0.25,ampl:0.51};
     }
-  }
-  else {
+  } else{
     if (w.cnfg.n!=1) w.cnfg={n:1,dt:1,level:0.47,ampl:0};
   }
 
@@ -216,12 +207,10 @@ function iLogic(){
   if (kbdSt==3){
     if (v.tmr.feed===0){
       v.tmr.feed=600; v.ch2max=c.ch2max;
-    }
-    else{
+    } else{
       v.tmr.feed=0; v.tmr.pPomp=60;
     }
-  }
-  else if (kbdSt==2){
+  } else if (kbdSt==2){
     if (v.tmr.pPomp===0) v.tmr.pPomp=60;
     else v.tmr.pPomp=0;
   }
@@ -244,8 +233,7 @@ function iLogic(){
             iEspTimeout(1000);
           }
         }
-      }
-      else v.tmr.feed=1;
+      } else v.tmr.feed=1;
     }
     if ((i&1)===0){
       str="Low water level"; logicLcd[0]="L";
@@ -269,8 +257,7 @@ function iLogic(){
         IftttMsg[IftttMsg.length]=parseInt(v.ch2max*1000)+"mV";
         iEspTimeout(1000);
       }
-    }
-    else if ((i&1)==1){
+    } else if ((i&1)==1){
       if (v.ch2v>=v.ch2max) v.ch2v=v.ch2max;
       else v.ch2v+=0.02;
       if (v.tmr.ch2hi===0 && v.ch2max<c.ch2max){
@@ -298,8 +285,7 @@ function iLogic(){
     str="Peristaltic pump"; logicLcd[0]="P";
     if (v.tmr.elGate) ch4n=3;
     else ch4n=1;
-  }
-  else{
+  } else{
     if (v.tmr.elGate) ch4n=2;
     else ch4n=0;
   }
@@ -316,17 +302,16 @@ function iLogic(){
   if ((v.powVAv4/4)<c.powVoltLv){
     w.on=0; ch3=0;
     lcdO.pow="Backup power";
-  }
-  else if (lcdO.pow){
+  } else if (lcdO.pow){
     delete lcdO.pow;
     iVar.espS="srvNO";
     IftttMsg[IftttMsg.length]="backup_power";
     iEspTimeout(5*60*1000);
   }
 
-  if (w.on) {
+  if (w.on){
     if (w.cnt) w.cnt--;
-    if (w.cnt===0) {
+    if (w.cnt===0){
       w.cnt=w.cnfg.dt;
       var wVal=(1+Math.sin((w.idx-16)*Math.PI/32))*w.cnfg.ampl/2+w.cnfg.level;
       if (wVal==wValOld) logicLcd[1]="-";
@@ -337,8 +322,7 @@ function iLogic(){
       w.idx+=1;
       if (w.idx>63) w.idx=0;
     }
-  }
-  else {
+  } else{
     logicLcd[1]="_";
     w.idx=0; w.cnt=1;
     analogWrite(B6, 1.0, {freq:100000});
@@ -381,7 +365,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 2.0/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 2.1/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -422,4 +406,6 @@ function start(){
 }
 
 start();
-print(cfg.aplName+" started!");
+print(cfg.aplName+" started");
+print(lcdO.ver);
+print((new Date()).toUTCString());
