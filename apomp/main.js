@@ -195,6 +195,7 @@ function iLogic(){
     if (v.tmr.feed){
       if(--v.tmr.feed===0) v.tmr.pPomp=60;
     }
+    if (v.tmr.autoFeed) v.tmr.autoFeed--;
     if (v.tmr.pPomp) v.tmr.pPomp--;
     if (v.tmr.pPompOff) v.tmr.pPompOff--;
     if (v.tmr.mPomp) v.tmr.mPomp--;
@@ -206,7 +207,7 @@ function iLogic(){
 
   if (kbdSt==3){
     if (v.tmr.feed===0){
-      v.tmr.feed=600; v.ch2max=c.ch2max;
+      v.tmr.autoFeed=86400+60; v.tmr.feed=600; v.ch2max=c.ch2max;
     } else{
       v.tmr.feed=0; v.tmr.pPomp=60;
     }
@@ -216,8 +217,14 @@ function iLogic(){
   }
   kbdSt=0;
 
-  if (hms==c.pPompOnTime){
-    v.tmr.pPomp=30; v.tmr.pPompOff=3600;
+  if (hms==c.autoOnTime && v.tmr.feed===0){
+    if (v.tmr.autoFeed===0){
+      v.tmr.autoFeed=86400+60; v.tmr.feed=600; v.ch2max=c.ch2max;
+      IftttMsg[IftttMsg.length]="auto_feeding";
+      iEspTimeout(1000);
+    } else{
+      v.tmr.pPomp=30; v.tmr.pPompOff=3600;
+    }
   }
 
   i=7-digitalRead([A11,B4,B3]);
@@ -365,7 +372,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 2.1/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 2.2/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -392,8 +399,8 @@ function start(){
   setTimeout(iEsp,iEspTO);
 
   /*---Logic---*/
-  logicConst={ch2min:10.0,ch2max:15.0,ch3max:9.0,ch4max:12.0,powVoltLv:21.0,pPompOnTime:(9*3600+30*60)};
-  logicVar={ch2v:logicConst.ch2max,ch2max:logicConst.ch2max,tmr:{feed:0,pPomp:0,pPompOff:0,mPomp:0,mPompOff:0,elGate:0,ch2low:0,ch2hi:0},ch2Old:undefined,ch3Old:undefined,ch4Old:undefined,ch4nOld:undefined,powVAv4:24*4};
+  logicConst={ch2min:10.0,ch2max:15.0,ch3max:9.0,ch4max:12.0,powVoltLv:21.0,autoOnTime:(9*3600+30*60)};
+  logicVar={ch2v:logicConst.ch2max,ch2max:logicConst.ch2max,tmr:{feed:0,autoFeed:0,pPomp:0,pPompOff:0,mPomp:0,mPompOff:0,elGate:0,ch2low:0,ch2hi:0},ch2Old:undefined,ch3Old:undefined,ch4Old:undefined,ch4nOld:undefined,powVAv4:24*4};
   logicWave={idx:0,on:1,cnt:1,cnfg:{n:0,dt:1,level:0,ampl:0}};
   timeSec=0;
   wValOld=0;
