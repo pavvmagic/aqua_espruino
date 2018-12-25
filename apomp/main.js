@@ -219,7 +219,7 @@ function iLogic(){
 
   if (hms==c.autoOnTime && v.tmr.feed===0){
     if (v.tmr.autoFeed===0){
-      v.tmr.autoFeed=86400+60; v.tmr.feed=600; v.ch2max=c.ch2max;
+      v.tmr.autoFeed=86400+60; v.tmr.feed=60; v.ch2max=c.ch2max;
       IftttMsg[IftttMsg.length]="auto_feeding";
       iEspTimeout(1000);
     } else{
@@ -372,7 +372,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 2.2/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 2.3/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
