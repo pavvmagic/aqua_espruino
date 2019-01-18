@@ -227,6 +227,17 @@ function iLogic(){
     }
   }
 
+  if (udsVal>0.0013 && udsVal<0.0027){
+    udsAv=(udsAv+udsVal)/2;
+    if (udsAv>udsThr)
+      logicLcd[2]="l";
+    else
+      logicLcd[2]="h";
+  } else{
+    logicLcd[2]="e";
+  }
+  udsVal=0;
+
   i=7-digitalRead([A11,B4,B3]);
   if (i==inpOld){
     if ((i&2)===0){
@@ -355,6 +366,7 @@ function iLogic(){
     v.ch4nOld=ch4n;
   }
 
+  digitalPulse(A0,1,0.01);
   stm32f1.kickWatchdog();
   setTimeout(iLogic,100);
   digitalWrite(B11,1);
@@ -372,7 +384,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 2.3/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 2.4/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -388,7 +400,7 @@ function start(){
   iVar={espS:"pon",srvR:false,ip:""};
   iEspTmr=undefined;
 
-  A1.mode("input_pullup");
+  A0.reset();
   A4.mode("input_pullup");
   A5.mode("input_pullup");
   A11.mode("input_pullup");
@@ -405,9 +417,14 @@ function start(){
   timeSec=0;
   wValOld=0;
   kbdSt=0;
+  udsTm=0;
+  udsVal=0;
+  udsAv=0.0013;
+  udsThr=0.0017;
 
   setTimeout(iLogic,100);
-  setWatch(function(e){if((e.time-e.lastTime)>0.2) kbdSt=1;},A1,{repeat:true, edge:'falling', debounce:20});
+  setWatch(function(e){udsTm=e.time;},A1,{repeat:true, edge:'rising'});
+  setWatch(function(e){udsVal=e.time-udsTm;},A1,{repeat:true, edge:'falling'});
   setWatch(function(e){if((e.time-e.lastTime)>0.2) kbdSt=2;},A4,{repeat:true, edge:'falling', debounce:20});
   setWatch(function(e){if((e.time-e.lastTime)>0.2) kbdSt=3;},A5,{repeat:true, edge:'falling', debounce:20});
 }
