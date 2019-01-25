@@ -230,16 +230,23 @@ function iLogic(){
   i=7-digitalRead([A11,B4,B3]);
 
   if (udsVal>0.0013 && udsVal<0.0027){
+    if (udsVal<udsAv){
+      if ((udsAv-udsVal)>udsRate)
+        udsVal=udsAv-udsRate;
+    } else{
+      if ((udsVal-udsAv)>udsRate)
+        udsVal=udsAv+udsRate;
+    }
     udsAv=(udsAv+udsVal)/2;
     if (udsAv>udsThr)
-      logicLcd[2]="l";
+      logicLcd[2]="L";
     else{
-      logicLcd[2]="h";
-	  i|=8;
-	}
+      logicLcd[2]="H";
+      i|=8;
+    }
   } else{
-    logicLcd[2]="e";
-	i|=8;
+    logicLcd[2]="*";
+    i|=8;
   }
   udsVal=0;
 
@@ -388,7 +395,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 2.5/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 2.6/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -425,6 +432,7 @@ function start(){
   udsVal=0;
   udsAv=0.0013;
   udsThr=0.00155;
+  udsRate=0.000006;
 
   setTimeout(iLogic,100);
   setWatch(function(e){udsTm=e.time;},A1,{repeat:true, edge:'rising'});
