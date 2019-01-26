@@ -286,7 +286,7 @@ function iLogic(){
         IftttMsg[IftttMsg.length]=parseInt(v.ch2max*1000)+"mV";
         iEspTimeout(1000);
       }
-    } else if ((i&8)==1){
+    } else if ((i&8)!=0){
       if (v.ch2v>=v.ch2max) v.ch2v=v.ch2max;
       else v.ch2v+=0.02;
       if (v.tmr.ch2hi===0 && v.ch2max<c.ch2max){
@@ -395,7 +395,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 2.6/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 2.7/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -431,7 +431,7 @@ function start(){
   udsTm=0;
   udsVal=0;
   udsAv=0.0013;
-  udsThr=0.00155;
+  udsThr=0.0017;
   udsRate=0.000006;
 
   setTimeout(iLogic,100);
