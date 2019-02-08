@@ -176,7 +176,7 @@ function iLogic(){
   logicLcd[0]=" ";
   var str="";
   var c=logicConst,v=logicVar,w=logicWave;
-  var ch2=v.ch2max,ch3=c.ch3max,ch4=c.ch4max,ch4n=0;
+  var ch2=c.ch2max,ch3=c.ch3max,ch4=c.ch4max,ch4n=0;
   var hms=timeSec%86400;
   v.powVAv4=(analogRead(A6)*40.425-(v.powVAv4/4))+v.powVAv4;
 
@@ -200,14 +200,11 @@ function iLogic(){
     if (v.tmr.pPompOff) v.tmr.pPompOff--;
     if (v.tmr.mPomp) v.tmr.mPomp--;
     if (v.tmr.mPompOff) v.tmr.mPompOff--;
-    if (v.tmr.elGate) v.tmr.elGate--;
-    if (v.tmr.ch2low) v.tmr.ch2low--;
-    if (v.tmr.ch2hi) v.tmr.ch2hi--;
   }
 
   if (kbdSt==3){
     if (v.tmr.feed===0){
-      v.tmr.autoFeed=86400+60; v.tmr.feed=600; v.ch2max=c.ch2max;
+      v.tmr.autoFeed=86400+60; v.tmr.feed=600;
     } else{
       v.tmr.feed=0; v.tmr.pPomp=60;
     }
@@ -219,15 +216,13 @@ function iLogic(){
 
   if (hms==c.autoOnTime && v.tmr.feed===0){
     if (v.tmr.autoFeed===0){
-      v.tmr.autoFeed=86400+60; v.tmr.feed=60; v.ch2max=c.ch2max;
+      v.tmr.autoFeed=86400+60; v.tmr.feed=60;
       IftttMsg[IftttMsg.length]="auto_feeding";
       iEspTimeout(1000);
     } else{
       v.tmr.pPomp=30; v.tmr.pPompOff=3600;
     }
   }
-
-  i=7-digitalRead([A11,B4,B3]);
 
   if (udsVal>0.0013 && udsVal<0.0027){
     if (udsVal<udsAv){
@@ -238,67 +233,59 @@ function iLogic(){
         udsVal=udsAv+udsRate;
     }
     udsAv=(udsAv+udsVal)/2;
-    if (udsAv>udsThr)
-      logicLcd[2]="L";
-    else{
-      logicLcd[2]="H";
-      i|=8;
+    /*--PI--*/
+    piErrP=udsThr-udsAv;
+    piErrI+=piErrP;
+    var iNorm=piKi*piErrI;
+    if (iNorm>1) iNorm=1;
+    else if (iNorm<-1) iNorm=-1;
+    piOut=piKp*piErrP+iNorm;
+    if (piOut>1) piOut=1;
+    else if (piOut<-1) piOut=-1;
+    v.ch2v=piOut*2.5+12.5;
+    /*------*/
+    if (piOut==1){piTmr=100; piSt="H";}
+    else if (piOut==-1){
+      piSt="L";
+      if (piTmr){
+        piTmr--;
+        if (piTmr===0){
+          if (v.tmr.pPompOff===0){
+            v.tmr.pPomp=30; v.tmr.pPompOff=3600;
+            IftttMsg[IftttMsg.length]="low_wt_level";
+            iEspTimeout(1000);
+          }
+        }
+      } else{
+        str="Low water level"; logicLcd[0]="L";
+        if (udsAv>udsLowThr){
+          v.tmr.pPomp=30; v.tmr.pPompOff=3600;
+          v.tmr.autoFeed=86400+60; v.tmr.feed=30;
+          IftttMsg[IftttMsg.length]="crit_wt_level";
+          iEspTimeout(1000);
+        }
+      }
     }
+    else{piTmr=100; piSt=" ";}
   } else{
-    logicLcd[2]="*";
-    i|=8;
+    piSt="X";
   }
   udsVal=0;
+  logicLcd[2]=piSt;
 
+  i=7-digitalRead([A11,B4,B3]);
   if (i==inpOld){
     if ((i&2)===0){
       if (v.tmr.feed===0){
         str="High water level"; logicLcd[0]="H";
-        v.tmr.elGate=10;
         if (v.tmr.mPomp===0){
           if (v.tmr.mPompOff===0){
-            v.tmr.mPomp=4; v.tmr.mPompOff=600; v.ch2max=c.ch2max;
+            v.tmr.mPomp=4; v.tmr.mPompOff=600;
             IftttMsg[IftttMsg.length]="high_wt_level";
             iEspTimeout(1000);
           }
         }
       } else v.tmr.feed=1;
-    }
-    if ((i&8)===0){
-      str="Low water level"; logicLcd[0]="L";
-      if (v.tmr.pPompOff===0){
-        v.tmr.pPomp=30; v.tmr.pPompOff=3600;
-        IftttMsg[IftttMsg.length]="low_wt_level";
-        iEspTimeout(1000);
-      }
-    }
-    if ((i&8)===0){
-      if (v.ch2v<=c.ch2min) v.ch2v=c.ch2min;
-      else v.ch2v-=0.02;
-      if (v.tmr.ch2low===0){
-        v.tmr.ch2low=300;
-        v.tmr.ch2hi=86400;
-
-        v.ch2max-=0.5;
-        if (v.ch2max<=c.ch2min) v.ch2max=c.ch2min;
-
-        IftttMsg[IftttMsg.length]="pomp_volt_dec";
-        IftttMsg[IftttMsg.length]=parseInt(v.ch2max*1000)+"mV";
-        iEspTimeout(1000);
-      }
-    } else if ((i&8)!=0){
-      if (v.ch2v>=v.ch2max) v.ch2v=v.ch2max;
-      else v.ch2v+=0.02;
-      if (v.tmr.ch2hi===0 && v.ch2max<c.ch2max){
-        v.tmr.ch2hi=86400;
-
-        v.ch2max+=0.5;
-        if (v.ch2max>=c.ch2max) v.ch2max=c.ch2max;
-
-        IftttMsg[IftttMsg.length]="pomp_volt_inc";
-        IftttMsg[IftttMsg.length]=parseInt(v.ch2max*1000)+"mV";
-        iEspTimeout(1000);
-      }
     }
   }
   inpOld=i;
@@ -307,16 +294,14 @@ function iLogic(){
     ch2=v.ch2v;
   else{
     str="Pause of feeding"; logicLcd[0]="F";
-    w.on=0; ch2=0; ch3=0; v.tmr.elGate=10;
+    w.on=0; ch2=0; ch3=0;
   }
 
   if (v.tmr.pPomp){
     str="Peristaltic pump"; logicLcd[0]="P";
-    if (v.tmr.elGate) ch4n=3;
-    else ch4n=1;
+    ch4n=1;
   } else{
-    if (v.tmr.elGate) ch4n=2;
-    else ch4n=0;
+    ch4n=0;
   }
 
   if (v.tmr.mPomp)
@@ -395,7 +380,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 2.7/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 2.8/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -423,16 +408,13 @@ function start(){
 
   /*---Logic---*/
   logicConst={ch2min:10.0,ch2max:15.0,ch3max:9.0,ch4max:12.0,powVoltLv:21.0,autoOnTime:(9*3600+30*60)};
-  logicVar={ch2v:logicConst.ch2max,ch2max:logicConst.ch2max,tmr:{feed:0,autoFeed:0,pPomp:0,pPompOff:0,mPomp:0,mPompOff:0,elGate:0,ch2low:0,ch2hi:0},ch2Old:undefined,ch3Old:undefined,ch4Old:undefined,ch4nOld:undefined,powVAv4:24*4};
+  logicVar={ch2v:logicConst.ch2max,tmr:{feed:0,autoFeed:0,pPomp:0,pPompOff:0,mPomp:0,mPompOff:0},ch2Old:undefined,ch3Old:undefined,ch4Old:undefined,ch4nOld:undefined,powVAv4:24*4};
   logicWave={idx:0,on:1,cnt:1,cnfg:{n:0,dt:1,level:0,ampl:0}};
   timeSec=0;
   wValOld=0;
   kbdSt=0;
-  udsTm=0;
-  udsVal=0;
-  udsAv=0.0013;
-  udsThr=0.0017;
-  udsRate=0.000006;
+  udsTm=0; udsVal=0; udsAv=0.0013; udsThr=0.0017; udsLowThr=0.0019; udsRate=0.000006;
+  piKp=16666.0; piKi=-1666.0; piErrI=0; piErrP=0; piOut=0; piSt="X"; piTmr=100;
 
   setTimeout(iLogic,100);
   setWatch(function(e){udsTm=e.time;},A1,{repeat:true, edge:'rising'});
