@@ -380,7 +380,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 2.8/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 3.0/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -414,7 +414,7 @@ function start(){
   wValOld=0;
   kbdSt=0;
   udsTm=0; udsVal=0; udsAv=0.0013; udsThr=0.0017; udsLowThr=0.0019; udsRate=0.000006;
-  piKp=16666.0; piKi=-1666.0; piErrI=0; piErrP=0; piOut=0; piSt="X"; piTmr=100;
+  piKp=16666.0; piKi=-166.0; piErrI=0; piErrP=0; piOut=0; piSt="X"; piTmr=100;
 
   setTimeout(iLogic,100);
   setWatch(function(e){udsTm=e.time;},A1,{repeat:true, edge:'rising'});
