@@ -176,7 +176,7 @@ function iLogic(){
   logicLcd[0]=" ";
   var str="";
   var c=logicConst,v=logicVar,w=logicWave;
-  var ch2=c.ch2max,ch3=c.ch3max,ch4=c.ch4max,ch4n=0;
+  var ch2=16.0,ch3=c.ch3max,ch4=c.ch4max,ch4n=0;
   var hms=timeSec%86400;
   v.powVAv4=(analogRead(A6)*40.425-(v.powVAv4/4))+v.powVAv4;
 
@@ -193,7 +193,10 @@ function iLogic(){
 
   if (secEv===true){
     if (v.tmr.feed){
-      if(--v.tmr.feed===0) v.tmr.pPomp=60;
+      if(--v.tmr.feed===0){
+        if (udsAv>udsLowThr) v.tmr.feed=30;
+        else v.tmr.pPomp=60;
+      }
     }
     if (v.tmr.autoFeed) v.tmr.autoFeed--;
     if (v.tmr.pPomp) v.tmr.pPomp--;
@@ -206,7 +209,8 @@ function iLogic(){
     if (v.tmr.feed===0){
       v.tmr.autoFeed=86400+60; v.tmr.feed=600;
     } else{
-      v.tmr.feed=0; v.tmr.pPomp=60;
+      if (udsAv>udsLowThr) v.tmr.feed=30;
+      else {v.tmr.feed=0; v.tmr.pPomp=60;}
     }
   } else if (kbdSt==2){
     if (v.tmr.pPomp===0) v.tmr.pPomp=60;
@@ -242,7 +246,7 @@ function iLogic(){
     piOut=piKp*piErrP+iNorm;
     if (piOut>1) piOut=1;
     else if (piOut<-1) piOut=-1;
-    v.ch2v=piOut*2.5+12.5;
+    v.ch2v=piOut*2.5+13.5;
     /*------*/
     if (piOut==1){piTmr=100; piSt="H";}
     else if (piOut==-1){
@@ -266,9 +270,9 @@ function iLogic(){
         }
       }
     }
-    else{piTmr=100; piSt=" ";}
+    else{piTmr=100; piSt=parseInt((piOut+1)*5);}
   } else{
-    piSt="X";
+    piSt="E";
   }
   udsVal=0;
   logicLcd[2]=piSt;
@@ -380,7 +384,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 3.0/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 3.1/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -407,8 +411,8 @@ function start(){
   setTimeout(iEsp,iEspTO);
 
   /*---Logic---*/
-  logicConst={ch2min:10.0,ch2max:15.0,ch3max:9.0,ch4max:12.0,powVoltLv:21.0,autoOnTime:(9*3600+30*60)};
-  logicVar={ch2v:logicConst.ch2max,tmr:{feed:0,autoFeed:0,pPomp:0,pPompOff:0,mPomp:0,mPompOff:0},ch2Old:undefined,ch3Old:undefined,ch4Old:undefined,ch4nOld:undefined,powVAv4:24*4};
+  logicConst={ch3max:9.0,ch4max:12.0,powVoltLv:21.0,autoOnTime:(9*3600+30*60)};
+  logicVar={ch2v:16.0,tmr:{feed:0,autoFeed:0,pPomp:0,pPompOff:0,mPomp:0,mPompOff:0},ch2Old:undefined,ch3Old:undefined,ch4Old:undefined,ch4nOld:undefined,powVAv4:24*4};
   logicWave={idx:0,on:1,cnt:1,cnfg:{n:0,dt:1,level:0,ampl:0}};
   timeSec=0;
   wValOld=0;
