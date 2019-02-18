@@ -237,6 +237,12 @@ function iLogic(){
         udsVal=udsAv+udsRate;
     }
     udsAv=(udsAv+udsVal)/2;
+    if (udsAv>udsLowThr){
+      v.tmr.pPomp=30; v.tmr.pPompOff=3600;
+      v.tmr.autoFeed=86400+60; v.tmr.feed=30;
+      IftttMsg[IftttMsg.length]="crit_wt_level";
+      iEspTimeout(1000);
+    }
     /*--PI--*/
     piErrP=udsThr-udsAv;
     piErrI+=piErrP;
@@ -250,7 +256,7 @@ function iLogic(){
     /*------*/
     if (piOut==1){piTmr=100; piSt="H";}
     else if (piOut==-1){
-      piSt="L";
+      str="Low water level"; logicLcd[0]="L"; piSt="L";
       if (piTmr){
         piTmr--;
         if (piTmr===0){
@@ -259,14 +265,6 @@ function iLogic(){
             IftttMsg[IftttMsg.length]="low_wt_level";
             iEspTimeout(1000);
           }
-        }
-      } else{
-        str="Low water level"; logicLcd[0]="L";
-        if (udsAv>udsLowThr){
-          v.tmr.pPomp=30; v.tmr.pPompOff=3600;
-          v.tmr.autoFeed=86400+60; v.tmr.feed=30;
-          IftttMsg[IftttMsg.length]="crit_wt_level";
-          iEspTimeout(1000);
         }
       }
     }
@@ -384,7 +382,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 3.1/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 3.3/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -418,7 +416,7 @@ function start(){
   wValOld=0;
   kbdSt=0;
   udsTm=0; udsVal=0; udsAv=0.0013; udsThr=0.0017; udsLowThr=0.0019; udsRate=0.000006;
-  piKp=16666.0; piKi=-166.0; piErrI=0; piErrP=0; piOut=0; piSt="X"; piTmr=100;
+  piKp=16666.0; piKi=0; piErrI=0; piErrP=0; piOut=0; piSt="X"; piTmr=100;
 
   setTimeout(iLogic,100);
   setWatch(function(e){udsTm=e.time;},A1,{repeat:true, edge:'rising'});
