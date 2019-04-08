@@ -194,11 +194,10 @@ function iLogic(){
   if (secEv===true){
     if (v.tmr.feed){
       if(--v.tmr.feed===0){
-        if (udsAv>udsLowThr) v.tmr.feed=30;
+        if (udsAv>udsLowThr) v.tmr.feed=300;
         else v.tmr.pPomp=60;
       }
     }
-    if (v.tmr.autoFeed) v.tmr.autoFeed--;
     if (v.tmr.pPomp) v.tmr.pPomp--;
     if (v.tmr.pPompOff) v.tmr.pPompOff--;
     if (v.tmr.mPomp) v.tmr.mPomp--;
@@ -207,9 +206,9 @@ function iLogic(){
 
   if (kbdSt==3){
     if (v.tmr.feed===0){
-      v.tmr.autoFeed=86400+60; v.tmr.feed=600;
+      v.tmr.feed=600;
     } else{
-      if (udsAv>udsLowThr) v.tmr.feed=30;
+      if (udsAv>udsLowThr) v.tmr.feed=300;
       else {v.tmr.feed=0; v.tmr.pPomp=60;}
     }
   } else if (kbdSt==2){
@@ -218,14 +217,10 @@ function iLogic(){
   }
   kbdSt=0;
 
-  if (hms==c.autoOnTime && v.tmr.feed===0){
-    if (v.tmr.autoFeed===0){
-      v.tmr.autoFeed=86400+60; v.tmr.feed=60;
-      IftttMsg[IftttMsg.length]="auto_feeding";
-      iEspTimeout(1000);
-    } else{
-      v.tmr.pPomp=30; v.tmr.pPompOff=3600;
-    }
+  if (v.tmr.feed===0 && (hms==c.autoOnTime1 || hms==c.autoOnTime2)){
+    v.tmr.feed=300;
+    IftttMsg[IftttMsg.length]="auto_feeding";
+    iEspTimeout(1000);
   }
 
   if (udsVal>0.0013 && udsVal<0.0027){
@@ -238,18 +233,13 @@ function iLogic(){
     }
     udsAv=(udsAv+udsVal)/2;
     if (udsAv>udsLowThr){
-      v.tmr.pPomp=30; v.tmr.pPompOff=3600;
-      v.tmr.autoFeed=86400+60; v.tmr.feed=30;
+      v.tmr.pPomp=30; v.tmr.pPompOff=3600; v.tmr.feed=300;
       IftttMsg[IftttMsg.length]="crit_wt_level";
       iEspTimeout(1000);
     }
     /*--PI--*/
     piErrP=udsThr-udsAv;
-    piErrI+=piErrP;
-    var iNorm=piKi*piErrI;
-    if (iNorm>1) iNorm=1;
-    else if (iNorm<-1) iNorm=-1;
-    piOut=piKp*piErrP+iNorm;
+    piOut=piKp*piErrP;
     if (piOut>1) piOut=1;
     else if (piOut<-1) piOut=-1;
     v.ch2v=piOut*2.5+13.5;
@@ -382,7 +372,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 3.3/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 3.4/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -409,14 +399,14 @@ function start(){
   setTimeout(iEsp,iEspTO);
 
   /*---Logic---*/
-  logicConst={ch3max:9.0,ch4max:12.0,powVoltLv:21.0,autoOnTime:(9*3600+30*60)};
-  logicVar={ch2v:16.0,tmr:{feed:0,autoFeed:0,pPomp:0,pPompOff:0,mPomp:0,mPompOff:0},ch2Old:undefined,ch3Old:undefined,ch4Old:undefined,ch4nOld:undefined,powVAv4:24*4};
+  logicConst={ch3max:9.0,ch4max:12.0,powVoltLv:21.0,autoOnTime1:(9*3600+30*60),autoOnTime2:(20*3600+30*60)};
+  logicVar={ch2v:16.0,tmr:{feed:0,pPomp:0,pPompOff:0,mPomp:0,mPompOff:0},ch2Old:undefined,ch3Old:undefined,ch4Old:undefined,ch4nOld:undefined,powVAv4:24*4};
   logicWave={idx:0,on:1,cnt:1,cnfg:{n:0,dt:1,level:0,ampl:0}};
   timeSec=0;
   wValOld=0;
   kbdSt=0;
   udsTm=0; udsVal=0; udsAv=0.0013; udsThr=0.0017; udsLowThr=0.0019; udsRate=0.000006;
-  piKp=16666.0; piKi=0; piErrI=0; piErrP=0; piOut=0; piSt="X"; piTmr=100;
+  piKp=16666.0; piErrP=0; piOut=0; piSt="X"; piTmr=100;
 
   setTimeout(iLogic,100);
   setWatch(function(e){udsTm=e.time;},A1,{repeat:true, edge:'rising'});
