@@ -194,7 +194,7 @@ function iLogic(){
   if (secEv===true){
     if (v.tmr.feed){
       if(--v.tmr.feed===0){
-        if (udsAv>udsLowThr) v.tmr.feed=300;
+        if (udsAv>udsLowThr) v.tmr.feed=180;
         else v.tmr.pPomp=60;
       }
     }
@@ -208,7 +208,7 @@ function iLogic(){
     if (v.tmr.feed===0){
       v.tmr.feed=600;
     } else{
-      if (udsAv>udsLowThr) v.tmr.feed=300;
+      if (udsAv>udsLowThr) v.tmr.feed=180;
       else {v.tmr.feed=0; v.tmr.pPomp=60;}
     }
   } else if (kbdSt==2){
@@ -218,7 +218,7 @@ function iLogic(){
   kbdSt=0;
 
   if (v.tmr.feed===0 && (hms==c.autoOnTime1 || hms==c.autoOnTime2)){
-    v.tmr.feed=300;
+    v.tmr.feed=180;
     IftttMsg[IftttMsg.length]="auto_feeding";
     iEspTimeout(1000);
   }
@@ -233,7 +233,7 @@ function iLogic(){
     }
     udsAv=(udsAv+udsVal)/2;
     if (udsAv>udsLowThr){
-      v.tmr.pPomp=30; v.tmr.pPompOff=3600; v.tmr.feed=300;
+      v.tmr.pPomp=30; v.tmr.pPompOff=3600; v.tmr.feed=180;
       IftttMsg[IftttMsg.length]="crit_wt_level";
       iEspTimeout(1000);
     }
@@ -372,7 +372,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 3.4/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 3.5/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
