@@ -224,14 +224,8 @@ function iLogic(){
   }
 
   if (udsVal>0.0013 && udsVal<0.0027){
-    if (udsVal<udsAv){
-      if ((udsAv-udsVal)>udsRate)
-        udsVal=udsAv-udsRate;
-    } else{
-      if ((udsVal-udsAv)>udsRate)
-        udsVal=udsAv+udsRate;
-    }
-    udsAv=(udsAv+udsVal)/2;
+    udsAvI+=(udsVal-(udsAvI/2)); udsAvII+=((udsAvI-udsAvII)/2);
+    udsAv=udsAvII/2;
     if (udsAv>udsLowThr){
       v.tmr.pPomp=30; v.tmr.pPompOff=3600; v.tmr.feed=180;
       IftttMsg[IftttMsg.length]="crit_wt_level";
@@ -372,7 +366,7 @@ function start(){
   iLcdExTO=4000;
   iEspTO=3000;
   lcdO={};
-  lcdO.ver="JS:"+process.version+" 3.6/"+cfg.ver;
+  lcdO.ver="JS:"+process.version+" 3.7/"+cfg.ver;
 
   iSerCmdV={st:0,conn:0,ifttt:8};
   IftttR=["GET /trigger/","/with/key/"," HTTP/1.1\r\nHost: maker.ifttt.com\r\n\r\n"];
@@ -405,7 +399,7 @@ function start(){
   timeSec=0;
   wValOld=0;
   kbdSt=0;
-  udsTm=0; udsVal=0; udsAv=0.0013; udsThr=0.0017; udsLowThr=0.0019; udsRate=0.000006;
+  udsTm=0; udsVal=0; udsAv=0.0013; udsThr=0.0017; udsLowThr=0.0019; udsAvI=udsAv*2; udsAvII=udsAvI;
   piKp=16666.0; piErrP=0; piOut=0; piSt="X"; piTmr=100;
 
   setTimeout(iLogic,100);
